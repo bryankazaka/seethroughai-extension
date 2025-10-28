@@ -1,0 +1,18 @@
+/* Content script styles for SeeThroughAI */
+
+/* Minimal styles to avoid conflicts with host pages */
+
+img.seethroughai-scanned {
+  outline: 3px solid #3399cc !important;
+  outline-offset: 2px !important;
+  animation: seethroughai-pulse 1s ease-in-out;
+}
+
+@keyframes seethroughai-pulse {
+  0%, 100% {
+    outline-color: #3399cc;
+  }
+  50% {
+    outline-color: #324669;
+  }
+}

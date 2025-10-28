@@ -1,0 +1,32 @@
+{
+  "name": "seethroughai-extension",
+  "version": "1.0.0",
+  "description": "AI-powered content authenticity detector browser extension",
+  "main": "background/service-worker.js",
+  "type": "module",
+  "scripts": {
+    "test": "node scripts/validate-manifest.js",
+    "build": "node scripts/build-extension.js",
+    "lint": "eslint extension/**/*.js",
+    "icons": "node scripts/generate-icons.js"
+  },
+  "keywords": [
+    "ai-detection",
+    "content-authenticity",
+    "browser-extension",
+    "machine-learning"
+  ],
+  "author": "Winner Kazaka",
+  "license": "MIT",
+  "dependencies": {
+    "firebase": "^11.8.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.55.0",
+    "archiver": "^7.0.1",
+    "sharp": "^0.33.4"
+  },
+  "overrides": {
+    "undici": "^6.21.2"
+  }
+}

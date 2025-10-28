@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SeeThroughAI Web – Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <!-- Site favicon to match brainrot.tools/seethroughai -->
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/assets/images/LOGOS_ALPHA0/WHITE/favicon48BWv2.svg">
+  <link rel="shortcut icon" type="image/svg+xml" sizes="any" href="/assets/images/LOGOS_ALPHA0/WHITE/favicon48BWv2.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/LOGOS_ALPHA0/WHITE/favicon48BWv2.svg">
+  <noscript>
+    <link rel="stylesheet" href="/assets/css/noscript.css" />
+  </noscript>
+  <style>
+    /* Keep styling minimal; rely on main.css */
+    .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+    .page { margin: 2rem 0; padding: 2rem; background: rgba(255,255,255,0.06); border-radius: 16px; }
+    .nav { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .nav a { border-bottom: none; cursor: pointer; }
+    .nav .sep { opacity: 0.7; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .graph-placeholder { width: 100%; height: 320px; border: 2px dashed rgba(255,255,255,0.4); border-radius: 12px; background: rgba(255,255,255,0.08); }
+  </style>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const views = ['dashboard','history','settings'];
+      const links = {
+        dashboard: document.querySelector('a[data-view="dashboard"]'),
+        history: document.querySelector('a[data-view="history"]'),
+        settings: document.querySelector('a[data-view="settings"]'),
+        logout: document.querySelector('a[data-action="logout"]'),
+      };
+      function showView(name) {
+        views.forEach(v => {
+          document.getElementById(v).classList.toggle('active', v === name);
+        });
+      }
+      // default view
+      showView('dashboard');
+      // wire clicks
+      views.forEach(v => links[v].addEventListener('click', (e) => { e.preventDefault(); showView(v); }));
+      links.logout.addEventListener('click', (e) => {
+        e.preventDefault();
+        // TODO: signout callback route then redirect
+        window.location.href = '/web-extension/seethroughai/web/signin.html';
+      });
+    });
+  </script>
+  
+</head>
+<body>
+  <div class="container">
+    <div class="nav">
+      <a href="#" data-view="dashboard">Dashboard</a>
+      <span class="sep">|</span>
+      <a href="#" data-view="history">History</a>
+      <span class="sep">|</span>
+      <a href="#" data-view="settings">Settings</a>
+      <span class="sep">|</span>
+      <a href="#" data-action="logout">Logout</a>
+    </div>
+
+    <div class="page">
+      <!-- Dashboard View -->
+      <section id="dashboard" class="view">
+        <h2 style="margin-top:0">Dashboard</h2>
+        <p class="muted" style="margin-bottom:1rem">Blank space for a graph (placeholder)</p>
+        <div class="graph-placeholder"></div>
+      </section>
+
+      <!-- History View -->
+      <section id="history" class="view">
+        <h2 style="margin-top:0">History</h2>
+        <ul>
+          <li>Result #1 – Placeholder item</li>
+          <li>Result #2 – Placeholder item</li>
+          <li>Result #3 – Placeholder item</li>
+        </ul>
+      </section>
+
+      <!-- Settings View -->
+      <section id="settings" class="view">
+        <h2 style="margin-top:0">Settings</h2>
+        <ul class="actions" style="margin-top:0.5rem;">
+          <li><a href="#" class="button small">Account</a></li>
+          <li><a href="#" class="button small">Preferences</a></li>
+          <li><a href="#" class="button small">Notifications</a></li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,10 @@
+node_modules/
+.env
+*.pth
+*.onnx
+dist/
+build/
+.DS_Store
+*.log
+.vscode/
+.idea/

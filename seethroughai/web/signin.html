@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SeeThroughAI Web – Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <!-- Site favicon to match brainrot.tools/seethroughai -->
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/assets/images/LOGOS_ALPHA0/WHITE/favicon48BWv2.svg">
+  <link rel="shortcut icon" type="image/svg+xml" sizes="any" href="/assets/images/LOGOS_ALPHA0/WHITE/favicon48BWv2.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/LOGOS_ALPHA0/WHITE/favicon48BWv2.svg">
+  <style>
+    .auth-container { max-width: 480px; margin: 4rem auto; padding: 2rem; background: rgba(255,255,255,0.06); border-radius: 16px; }
+    .auth-container h1 { font-family: 'Poppins', Arial, Helvetica, sans-serif; margin-bottom: 0.5rem; }
+    .auth-container p { opacity: 0.85; margin-bottom: 1.5rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.5rem; }
+    .form-group input { width: 100%; padding: 0.75rem 1rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.2); color: #fff; }
+    .btn { display: inline-block; width: 100%; padding: 0.85rem 1rem; border: 0; border-radius: 12px; cursor: pointer; color: #fff; font-weight: 600; }
+    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .muted { font-size: 0.9rem; opacity: 0.8; }
+    .link { color: #fff; text-decoration: underline; cursor: pointer; }
+    .divider { margin: 1.25rem 0; height: 1px; background: rgba(255,255,255,0.12); }
+    .register-options { display: none; }
+    .provider-btn { width: 100%; margin-top: 0.5rem; padding: 0.75rem 1rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.25); color: #fff; cursor: pointer; text-align: center; }
+  </style>
+  <noscript>
+    <link rel="stylesheet" href="/assets/css/noscript.css" />
+  </noscript>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('signin-form');
+      const emailEl = document.getElementById('email');
+      const passwordEl = document.getElementById('password');
+      const registerToggle = document.getElementById('register-toggle');
+      const registerPanel = document.getElementById('register-panel');
+
+      registerToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        registerPanel.style.display = registerPanel.style.display === 'none' || registerPanel.style.display === '' ? 'block' : 'none';
+      });
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = (emailEl.value || '').trim().toLowerCase();
+        // Placeholder routing logic; replace with Firebase Auth later
+        if (email === 'kidtrunk77@gmail.com') {
+          window.location.href = '/web-extension/seethroughai/web/admin.html';
+        } else {
+          window.location.href = '/web-extension/seethroughai/web/home.html';
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="auth-container">
+    <h1>SeeThroughAI Web</h1>
+    <p class="muted">Sign in to continue</p>
+    <form id="signin-form">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="you@example.com" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" required />
+      </div>
+      <button type="submit" class="btn btn-primary">Sign In</button>
+    </form>
+    <div class="divider"></div>
+    <p class="muted">New here? <a id="register-toggle" class="link" href="#">Register</a></p>
+    <div id="register-panel" class="register-options">
+      <p class="muted" style="margin-bottom: 0.75rem;">Choose a method</p>
+      <button class="provider-btn">Continue with Email</button>
+      <button class="provider-btn">Continue with Google</button>
+      <!-- TODO: Wire Email/Google providers via Firebase Auth -->
+    </div>
+  </div>
+</body>
+</html>
