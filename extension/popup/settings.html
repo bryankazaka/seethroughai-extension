@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SeeThroughAI - Settings</title>
+  <link rel="stylesheet" href="../../styles/settings.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>⚙️ Settings</h1>
+      <p class="subtitle">Configure your SeeThroughAI preferences</p>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="general">General</button>
+      <button class="tab" data-tab="detection">Detection</button>
+      <button class="tab" data-tab="privacy">Privacy</button>
+      <button class="tab" data-tab="account">Account</button>
+    </nav>
+
+    <main>
+      <!-- General Settings -->
+      <section id="general-tab" class="tab-content active">
+        <h2>General Settings</h2>
+        
+        <div class="setting-group">
+          <label class="setting-label">
+            <input type="checkbox" id="autoDetect" />
+            <span>Auto-detect AI content</span>
+          </label>
+          <p class="setting-description">Automatically analyze images as you browse</p>
+        </div>
+
+        <div class="setting-group">
+          <label class="setting-label">
+            <input type="checkbox" id="showBadges" />
+            <span>Show AI badges on images</span>
+          </label>
+          <p class="setting-description">Display visual indicators on detected AI images</p>
+        </div>
+
+        <div class="setting-group">
+          <label class="setting-label">
+            <input type="checkbox" id="enableNotifications" />
+            <span>Enable notifications</span>
+          </label>
+          <p class="setting-description">Get notified when AI content is detected</p>
+        </div>
+
+        <div class="setting-group">
+          <label for="theme">Theme</label>
+          <select id="theme" class="setting-select">
+            <option value="auto">Auto (System)</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Detection Settings -->
+      <section id="detection-tab" class="tab-content">
+        <h2>Detection Settings</h2>
+        
+        <div class="setting-group">
+          <label for="sensitivityLevel">Sensitivity Level</label>
+          <select id="sensitivityLevel" class="setting-select">
+            <option value="low">Low - Only flag definitely AI (>90%)</option>
+            <option value="medium" selected>Medium - Flag likely AI (>45%)</option>
+            <option value="high">High - Flag possibly AI (>10%)</option>
+          </select>
+          <p class="setting-description">Adjust how aggressively to flag potential AI content</p>
+        </div>
+
+        <div class="setting-group">
+          <label class="setting-label">
+            <input type="checkbox" id="saveDetections" />
+            <span>Save detection history</span>
+          </label>
+          <p class="setting-description">Keep a history of analyzed images (requires cloud storage)</p>
+        </div>
+
+        <div class="setting-group">
+          <label class="setting-label">
+            <input type="checkbox" id="useLocalModel" />
+            <span>Use local model inference</span>
+          </label>
+          <p class="setting-description">Run AI detection locally for better privacy (520MB download)</p>
+        </div>
+
+        <div class="setting-group">
+          <label class="setting-label">
+            <input type="checkbox" id="batchProcessing" />
+            <span>Enable batch processing</span>
+          </label>
+          <p class="setting-description">Process multiple images simultaneously</p>
+        </div>
+      </section>
+
+      <!-- Privacy Settings -->
+      <section id="privacy-tab" class="tab-content">
+        <h2>Privacy & Data</h2>
+        
+        <div class="setting-group">
+          <label class="setting-label">
+            <input type="checkbox" id="anonymousAnalytics" />
+            <span>Share anonymous usage data</span>
+          </label>
+          <p class="setting-description">Help improve SeeThroughAI by sharing anonymous statistics</p>
+        </div>
+
+        <div class="setting-group">
+          <label class="setting-label">
+            <input type="checkbox" id="cloudStorage" />
+            <span>Enable cloud storage</span>
+          </label>
+          <p class="setting-description">Sync detection history across devices</p>
+        </div>
+
+        <div class="setting-group">
+          <button class="btn btn-secondary" id="clearCache">Clear Model Cache</button>
+          <p class="setting-description">Free up storage by clearing downloaded AI model (520MB)</p>
+        </div>
+
+        <div class="setting-group">
+          <button class="btn btn-danger" id="clearHistory">Clear Detection History</button>
+          <p class="setting-description">Permanently delete all saved detections</p>
+        </div>
+      </section>
+
+      <!-- Account Settings -->
+      <section id="account-tab" class="tab-content">
+        <h2>Account</h2>
+        
+        <div class="user-info" id="userInfo">
+          <div class="avatar" id="userAvatar">👤</div>
+          <div class="user-details">
+            <h3 id="userName">Loading...</h3>
+            <p id="userEmail">Loading...</p>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <button class="btn btn-primary" id="editProfile">Edit Profile</button>
+        </div>
+
+        <div class="setting-group">
+          <button class="btn btn-secondary" id="changePassword">Change Password</button>
+        </div>
+
+        <div class="setting-group">
+          <button class="btn btn-danger" id="deleteAccount">Delete Account</button>
+          <p class="setting-description">Permanently delete your account and all data</p>
+        </div>
+
+        <div class="setting-group">
+          <button class="btn btn-secondary" id="signOut">Sign Out</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <button class="btn btn-primary" id="saveSettings">Save Settings</button>
+      <p class="status-message" id="statusMessage"></p>
+    </footer>
+  </div>
+
+  <script src="../../popup/settings.js"></script>
+</body>
+</html>

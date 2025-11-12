@@ -1,225 +1,297 @@
-// Service Worker for SeeThroughAI Extension
-// Handles ML model loading, context menus, and Firebase sync
+/**
+ * SeeThroughAI Service Worker (Bundled Version)
+ * Orchestrates context menus and forwards work to content scripts
+ */
 
-let modelLoaded = false;
-let inferenceEngine = null;
+console.log('🚀 SeeThroughAI service worker initialized');
 
-// Initialize on install
+// Create context menus and initialize settings
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('SeeThroughAI extension installed');
-  
-  // Create context menu
+  console.log('📦 SeeThroughAI extension installed');
+
+  // Primary analyze image option
   chrome.contextMenus.create({
-    id: 'scanImage',
-    title: 'Scan with SeeThroughAI',
+    id: 'analyze-image',
+    title: 'Analyze with SeeThroughAI',
     contexts: ['image']
   });
-  
+
+  // Page actions
   chrome.contextMenus.create({
-    id: 'captureArea',
-    title: 'Capture & Analyze Area',
+    id: 'scan-page-images',
+    title: 'Scan all images on page',
     contexts: ['page']
   });
-  
-  // Initialize storage
+
+  chrome.contextMenus.create({
+    id: 'capture-screen',
+    title: 'Capture & Analyze Screen',
+    contexts: ['page']
+  });
+
+  chrome.contextMenus.create({
+    id: 'open-settings',
+    title: 'SeeThroughAI Settings',
+    contexts: ['action', 'page']
+  });
+
+  // Ensure default settings exist
   chrome.storage.local.get(['settings'], (result) => {
     if (!result.settings) {
       chrome.storage.local.set({
         settings: {
-          autoSync: true,
-          quality: 'balanced',
-          saveHistory: true,
-          theme: 'light'
+          autoDetect: true,
+          showBadges: true,
+          enableNotifications: false,
+          theme: 'auto'
         }
       });
     }
   });
 });
 
-// Handle context menu clicks
-chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === 'scanImage') {
-    handleImageScan(info.srcUrl, tab);
-  } else if (info.menuItemId === 'captureArea') {
-    handleAreaCapture(tab);
-  }
-});
-
-// Handle messages from popup and content scripts
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'scanImage') {
-    handleImageScan(request.imageUrl, sender.tab)
-      .then(result => sendResponse({ success: true, result }))
-      .catch(error => sendResponse({ success: false, error: error.message }));
-    return true; // Async response
-  }
-  
-  if (request.action === 'getModelStatus') {
-    sendResponse({ loaded: modelLoaded });
-  }
-  
-  if (request.action === 'loadModel') {
-    loadModel()
-      .then(() => sendResponse({ success: true }))
-      .catch(error => sendResponse({ success: false, error: error.message }));
-    return true;
-  }
-  
-  if (request.action === 'getStats') {
-    getStats()
-      .then(stats => sendResponse({ success: true, stats }))
-      .catch(error => sendResponse({ success: false, error: error.message }));
-    return true;
-  }
-});
-
-// Image scanning function
-async function handleImageScan(imageUrl, tab) {
+// Forward context menu actions to the active tab's content script where DOM/canvas are available
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   try {
-    console.log('Scanning image:', imageUrl);
-    
-    // Ensure model is loaded
-    if (!modelLoaded) {
-      await loadModel();
-    }
-    
-    // TODO: Implement actual inference with Transformers.js or ONNX
-    // For now, return mock result
-    const result = {
-      scanId: generateId(),
-      imageUrl: imageUrl,
-      timestamp: Date.now(),
-      result: Math.random() > 0.5 ? 'ai' : 'human',
-      confidence: Math.floor(Math.random() * 30) + 70,
-      processingTime: Math.floor(Math.random() * 3000) + 1000,
-      metadata: {
-        imageSize: 'unknown',
-        tabUrl: tab?.url || 'unknown'
+    if (!tab || !tab.id) return;
+
+    if (info.menuItemId === 'analyze-image' && info.srcUrl) {
+      // Ask the content script to analyze this image
+      try {
+        // Try to send message, if it fails, inject content script first
+        chrome.tabs.sendMessage(tab.id, { action: 'analyzeImage', imageUrl: info.srcUrl }, async (response) => {
+          if (chrome.runtime.lastError) {
+            // Content script not loaded, inject it
+            console.log('Content script not found, injecting...');
+            try {
+              await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                files: ['content/content-script.js']
+              });
+              
+              await chrome.scripting.insertCSS({
+                target: { tabId: tab.id },
+                files: ['styles/content.css']
+              });
+              
+              // Wait for initialization
+              setTimeout(async () => {
+                // Try again
+                await chrome.tabs.sendMessage(tab.id, { action: 'analyzeImage', imageUrl: info.srcUrl });
+                chrome.notifications.create({
+                  type: 'basic',
+                  iconUrl: chrome.runtime.getURL('assets/icon48.png'),
+                  title: 'SeeThroughAI',
+                  message: 'Analyzing image — results will appear shortly.'
+                });
+              }, 500);
+            } catch (injectError) {
+              console.error('Failed to inject content script:', injectError);
+              chrome.notifications.create({
+                type: 'basic',
+                iconUrl: chrome.runtime.getURL('assets/icon48.png'),
+                title: 'SeeThroughAI Error',
+                message: 'Failed to inject analyzer. Try refreshing the page.'
+              });
+            }
+          } else {
+            // Success
+            chrome.notifications.create({
+              type: 'basic',
+              iconUrl: chrome.runtime.getURL('assets/icon48.png'),
+              title: 'SeeThroughAI',
+              message: 'Analyzing image — results will appear shortly.'
+            });
+          }
+        });
+      } catch (err) {
+        console.error('Failed to send message to content script:', err);
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('assets/icon48.png'),
+          title: 'SeeThroughAI Error',
+          message: 'Failed to communicate with page. Try refreshing.'
+        });
       }
-    };
-    
-    // Save to local storage
-    await saveScanResult(result);
-    
-    // Sync to Firebase if enabled
-    const settings = await chrome.storage.local.get(['settings']);
-    if (settings.settings?.autoSync) {
-      await syncToFirebase(result);
     }
+
+    if (info.menuItemId === 'scan-page-images') {
+      try {
+        await chrome.tabs.sendMessage(tab.id, { action: 'scanPageImages' });
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('assets/icon48.png'),
+          title: 'SeeThroughAI',
+          message: 'Scanning page images — processing in background.'
+        });
+      } catch (err) {
+        console.error('Failed to send message to content script:', err);
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('assets/icon48.png'),
+          title: 'SeeThroughAI Error',
+          message: 'Failed to communicate with page. Try refreshing.'
+        });
+      }
+    }
+
+    if (info.menuItemId === 'capture-screen') {
+      try {
+        await chrome.tabs.sendMessage(tab.id, { action: 'captureScreen' });
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('assets/icon48.png'),
+          title: 'SeeThroughAI',
+          message: 'Starting screen capture...'
+        });
+      } catch (err) {
+        console.error('Failed to send message to content script:', err);
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('assets/icon48.png'),
+          title: 'SeeThroughAI Error',
+          message: 'Failed to communicate with page. Try refreshing.'
+        });
+      }
+    }
+
+    if (info.menuItemId === 'open-settings') {
+      // Open settings page in a new tab - correct path for bundled extension
+      const url = chrome.runtime.getURL('extension/popup/settings.html');
+      chrome.tabs.create({ url });
+    }
+  } catch (err) {
+    console.error('Context menu handling failed:', err);
+  }
+});
+
+// Receive analysis results from content scripts and surface notifications or store detections
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message && message.action === 'analysisResult') {
+    const { imageUrl, result } = message;
+
+    // Store basic detection in storage.history (so popup can display)
+    chrome.storage.local.get(['scanHistory'], (res) => {
+      const history = Array.isArray(res.scanHistory) ? res.scanHistory : [];
+      history.unshift({
+        id: Date.now().toString(36),
+        imageUrl,
+        result,
+        timestamp: Date.now()
+      });
+      // Keep recent 200 records
+      const trimmed = history.slice(0, 200);
+      chrome.storage.local.set({ scanHistory: trimmed });
+    });
+
+    // Optionally show notification with classification
+    if (result && result.label) {
+      const title = `SeeThroughAI — ${result.emoji} ${result.label}`;
+      const msg = `AI score: ${result.aiScore}% — ${result.classification}`;
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: chrome.runtime.getURL('assets/icon48.png'),
+        title,
+        message: msg
+      });
+    }
+
+    sendResponse({ success: true });
+    return true;
+  }
+
+  // Support simple settings get/update
+  if (message && message.action === 'get-settings') {
+    chrome.storage.local.get(['settings'], (result) => {
+      sendResponse({ success: true, settings: result.settings || {} });
+    });
+    return true;
+  }
+
+  if (message && message.action === 'update-settings') {
+    chrome.storage.local.set({ settings: message.settings }, () => {
+      sendResponse({ success: true });
+    });
+    return true;
+  }
+
+  // Handle capture visible tab request
+  if (message && message.action === 'captureVisibleTab') {
+    chrome.tabs.captureVisibleTab(null, { format: 'png' }, (dataUrl) => {
+      if (chrome.runtime.lastError) {
+        console.error('Capture failed:', chrome.runtime.lastError);
+        sendResponse({ success: false, error: chrome.runtime.lastError.message });
+        return;
+      }
+      
+      // If area is specified, crop the image
+      if (message.area) {
+        cropImage(dataUrl, message.area).then(croppedDataUrl => {
+          sendResponse(croppedDataUrl);
+        }).catch(error => {
+          console.error('Crop failed:', error);
+          sendResponse(dataUrl); // Send full image if crop fails
+        });
+      } else {
+        sendResponse(dataUrl);
+      }
+    });
+    return true; // Keep channel open for async response
+  }
+
+  // Handle analyze capture request
+  if (message && message.action === 'analyzeCapture') {
+    // Store the capture in history
+    chrome.storage.local.get(['scanHistory'], (res) => {
+      const history = Array.isArray(res.scanHistory) ? res.scanHistory : [];
+      history.unshift({
+        id: Date.now().toString(36),
+        imageUrl: message.imageData,
+        result: {
+          label: 'Captured Area',
+          classification: 'Analyzing...',
+          emoji: '📸',
+          aiScore: 0,
+          color: '#3399cc'
+        },
+        timestamp: Date.now()
+      });
+      chrome.storage.local.set({ scanHistory: history.slice(0, 200) });
+    });
     
-    // Show notification
+    // Notify user
     chrome.notifications.create({
       type: 'basic',
-      iconUrl: '../assets/icon128.png',
-      title: 'Scan Complete',
-      message: `Result: ${result.result.toUpperCase()} (${result.confidence}% confidence)`,
-      priority: 2
+      iconUrl: chrome.runtime.getURL('assets/icon48.png'),
+      title: 'SeeThroughAI',
+      message: 'Captured area saved! Analysis in progress...'
     });
     
-    return result;
-  } catch (error) {
-    console.error('Scan error:', error);
-    throw error;
+    sendResponse({ success: true });
+    return true;
   }
-}
 
-// Area capture function
-async function handleAreaCapture(tab) {
-  try {
-    // Inject capture UI into the page
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content/capture-ui.js']
-    });
-    
-    await chrome.scripting.insertCSS({
-      target: { tabId: tab.id },
-      files: ['styles/capture-ui.css']
-    });
-  } catch (error) {
-    console.error('Capture error:', error);
-  }
-}
+  return false;
+});
 
-// Model loading (placeholder)
-async function loadModel() {
-  console.log('Loading ML model...');
-  // TODO: Implement actual model loading with Transformers.js or ONNX Runtime Web
-  // Example:
-  // const { pipeline } = await import('./lib/transformers.min.js');
-  // inferenceEngine = await pipeline('zero-shot-image-classification');
-  
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      modelLoaded = true;
-      console.log('Model loaded successfully');
-      resolve();
-    }, 2000);
+// Helper function to crop image
+async function cropImage(dataUrl, area) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = new OffscreenCanvas(area.width, area.height);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, area.x, area.y, area.width, area.height, 0, 0, area.width, area.height);
+      canvas.convertToBlob({ type: 'image/png' }).then(blob => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      }).catch(reject);
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
   });
 }
 
-// Save scan result locally
-async function saveScanResult(result) {
-  return new Promise((resolve) => {
-    chrome.storage.local.get(['scanHistory'], (data) => {
-      const history = data.scanHistory || [];
-      history.unshift(result);
-      
-      // Keep only last 100 scans locally
-      if (history.length > 100) {
-        history.pop();
-      }
-      
-      chrome.storage.local.set({ scanHistory: history }, resolve);
-    });
-  });
-}
-
-// Get statistics
-async function getStats() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get(['scanHistory'], (data) => {
-      const history = data.scanHistory || [];
-      
-      const stats = {
-        totalScans: history.length,
-        aiDetected: history.filter(s => s.result === 'ai').length,
-        humanDetected: history.filter(s => s.result === 'human').length,
-        avgConfidence: history.length > 0 
-          ? Math.round(history.reduce((sum, s) => sum + s.confidence, 0) / history.length)
-          : 0,
-        lastScan: history[0]?.timestamp || null
-      };
-      
-      resolve(stats);
-    });
-  });
-}
-
-// Firebase sync (placeholder)
-async function syncToFirebase(result) {
-  // TODO: Implement Firebase sync
-  // This will connect to your Firebase Functions endpoint
-  console.log('Syncing to Firebase:', result.scanId);
-  
-  try {
-    // Example:
-    // const response = await fetch('https://your-firebase-url/api/scans', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     'Authorization': `Bearer ${await getAuthToken()}`
-    //   },
-    //   body: JSON.stringify(result)
-    // });
-    
-    return Promise.resolve();
-  } catch (error) {
-    console.error('Firebase sync error:', error);
-  }
-}
-
-// Utility: Generate unique ID
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
+console.log('✅ Service worker ready');

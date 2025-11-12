@@ -5,8 +5,9 @@ import fs from 'fs/promises';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const root = path.resolve(__dirname, '..');
-const extDir = path.join(root, 'extension');
-const manifestPath = path.join(extDir, 'manifest.json');
+// Validate the built extension in dist/ folder
+const distDir = path.join(root, 'dist');
+const manifestPath = path.join(distDir, 'manifest.json');
 
 function fail(msg) {
   console.error(`\u274c ${msg}`);
@@ -44,17 +45,17 @@ async function main() {
   if (!manifest.version) fail('version is required in manifest');
   ok(`name: ${manifest.name}, version: ${manifest.version}`);
 
-  const swPath = path.join(extDir, manifest.background?.service_worker || '');
+  const swPath = path.join(distDir, manifest.background?.service_worker || '');
   if (!(await exists(swPath))) fail(`background service worker not found: ${swPath}`);
   ok('background service worker exists');
 
-  const popupPath = path.join(extDir, manifest.action?.default_popup || '');
+  const popupPath = path.join(distDir, manifest.action?.default_popup || '');
   if (!(await exists(popupPath))) fail(`popup not found: ${popupPath}`);
   ok('popup exists');
 
   const contentJs = manifest.content_scripts?.[0]?.js?.[0];
   if (!contentJs) fail('content_scripts[0].js[0] missing');
-  const contentPath = path.join(extDir, contentJs);
+  const contentPath = path.join(distDir, contentJs);
   if (!(await exists(contentPath))) fail(`content script not found: ${contentPath}`);
   ok('content script exists');
 
@@ -64,7 +65,7 @@ async function main() {
   for (const [size, fname] of required) {
     const rel = icons[size];
     if (!rel || !rel.endsWith(fname)) fail(`icons[${size}] should point to ${fname}`);
-    const abs = path.join(extDir, rel);
+    const abs = path.join(distDir, rel);
     if (!(await exists(abs))) fail(`Icon missing on disk: ${abs}`);
   }
   ok('icons are present and correctly referenced');

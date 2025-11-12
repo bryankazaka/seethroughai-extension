@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SeeThroughAI - Admin Dashboard</title>
+  <link rel="stylesheet" href="../../styles/admin.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🛡️ Admin Dashboard</h1>
+      <p class="subtitle">System-wide analytics and user management</p>
+    </header>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading dashboard...</p>
+    </div>
+
+    <!-- Access Denied -->
+    <div id="accessDenied" class="access-denied" style="display: none;">
+      <div class="icon">🚫</div>
+      <h2>Access Denied</h2>
+      <p>You don't have permission to access the admin dashboard.</p>
+      <button class="btn btn-primary" onclick="window.close()">Close</button>
+    </div>
+
+    <!-- Dashboard Content -->
+    <main id="dashboardContent" style="display: none;">
+      <!-- System Stats -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div class="stat-content">
+            <h3 id="totalUsers">-</h3>
+            <p>Total Users</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🔍</div>
+          <div class="stat-content">
+            <h3 id="totalDetections">-</h3>
+            <p>Total Detections</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🤖</div>
+          <div class="stat-content">
+            <h3 id="aiPercentage">-</h3>
+            <p>AI Content %</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">📈</div>
+          <div class="stat-content">
+            <h3 id="activeUsers">-</h3>
+            <p>Active Users (30d)</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Charts -->
+      <section class="charts-section">
+        <div class="chart-container">
+          <h2>Detection Trends (Last 30 Days)</h2>
+          <canvas id="trendsChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+          <h2>Classification Distribution</h2>
+          <canvas id="distributionChart"></canvas>
+        </div>
+      </section>
+
+      <!-- Recent Detections -->
+      <section class="table-section">
+        <div class="section-header">
+          <h2>Recent Detections</h2>
+          <div class="filters">
+            <select id="filterClassification" class="filter-select">
+              <option value="all">All Classifications</option>
+              <option value="definitely-ai">Definitely AI</option>
+              <option value="likely-ai">Likely AI</option>
+              <option value="likely-not">Likely Not AI</option>
+              <option value="definitely-not">Definitely Not AI</option>
+            </select>
+            <button class="btn btn-secondary" id="refreshBtn">🔄 Refresh</button>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>User</th>
+                <th>URL</th>
+                <th>Classification</th>
+                <th>AI Score</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="detectionsTable">
+              <tr>
+                <td colspan="6" class="no-data">Loading detections...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <button class="btn btn-secondary" id="prevPage" disabled>← Previous</button>
+          <span id="pageInfo">Page 1</span>
+          <button class="btn btn-secondary" id="nextPage">Next →</button>
+        </div>
+      </section>
+
+      <!-- Top Users -->
+      <section class="table-section">
+        <h2>Top Users by Detection Count</h2>
+        
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>User</th>
+                <th>Email</th>
+                <th>Detections</th>
+                <th>Last Active</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="topUsersTable">
+              <tr>
+                <td colspan="6" class="no-data">Loading users...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- User Search -->
+      <section class="search-section">
+        <h2>User Search</h2>
+        <div class="search-box">
+          <input 
+            type="text" 
+            id="userSearch" 
+            placeholder="Search by email or user ID..."
+            class="search-input"
+          />
+          <button class="btn btn-primary" id="searchBtn">🔍 Search</button>
+        </div>
+
+        <div id="userDetails" class="user-details-card" style="display: none;">
+          <!-- User details will be populated here -->
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Last updated: <span id="lastUpdated">-</span></p>
+      <button class="btn btn-secondary" id="exportData">📊 Export Data</button>
+    </footer>
+  </div>
+
+  <script src="../../popup/admin.js"></script>
+</body>
+</html>

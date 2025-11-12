@@ -6,9 +6,15 @@
   "type": "module",
   "scripts": {
     "test": "node scripts/validate-manifest.js",
-    "build": "node scripts/build-extension.js",
+    "build": "vite build && node scripts/post-build.js",
+    "build:zip": "npm run build && node scripts/build-extension.js",
+    "dev": "vite build --watch",
     "lint": "eslint extension/**/*.js",
-    "icons": "node scripts/generate-icons.js"
+    "icons": "node scripts/generate-icons.js",
+    "emulators": "firebase emulators:start",
+    "emulators:export": "firebase emulators:export ./emulator-data",
+    "emulators:import": "firebase emulators:start --import=./emulator-data",
+    "seed-data": "node scripts/seed-emulator-data.js"
   },
   "keywords": [
     "ai-detection",
@@ -19,12 +25,18 @@
   "author": "Winner Kazaka",
   "license": "MIT",
   "dependencies": {
-    "firebase": "^11.8.0"
+    "firebase": "^11.8.0",
+    "firebase-admin": "^13.6.0",
+    "onnxruntime-web": "^1.16.0"
   },
   "devDependencies": {
-    "eslint": "^8.55.0",
+    "@vitejs/plugin-react": "^5.1.0",
     "archiver": "^7.0.1",
-    "sharp": "^0.33.4"
+    "eslint": "^8.55.0",
+    "firebase-tools": "^13.0.0",
+    "sharp": "^0.33.4",
+    "vite": "^7.2.2",
+    "vite-plugin-web-extension": "^4.5.0"
   },
   "overrides": {
     "undici": "^6.21.2"

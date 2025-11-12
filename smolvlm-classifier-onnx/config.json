@@ -1,0 +1,20 @@
+{
+  "model_type": "smolvlm-classifier-head",
+  "hidden_size": 576,
+  "num_classes": 2,
+  "id2label": {
+    "0": "real",
+    "1": "ai"
+  },
+  "label2id": {
+    "real": 0,
+    "ai": 1
+  },
+  "architecture": [
+    "Linear(576, 576)",
+    "LayerNorm(576)",
+    "ReLU()",
+    "Dropout(0.5)",
+    "Linear(576, 2)"
+  ]
+}

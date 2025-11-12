@@ -45,11 +45,24 @@ async function zipDirectory(srcDir, outFile) {
 
 async function main() {
   const pkg = await readJSON(pkgPath);
+  // Ensure output directory exists
   await ensureDir(distDir);
   const outName = `seethroughai-extension-v${pkg.version}.zip`;
   const outPath = path.join(distDir, outName);
   console.log(`Creating ${outPath} ...`);
-  await zipDirectory(extDir, outPath);
+  // If a Vite build has produced a bundled extension in dist, zip that.
+  // Fall back to zipping the extension/ folder if dist is missing.
+  const srcToZip = await (async () => {
+    try {
+      await fs.access(distDir);
+      // dist exists and will be used as source
+      return distDir;
+    } catch {
+      return extDir;
+    }
+  })();
+
+  await zipDirectory(srcToZip, outPath);
   console.log('Build complete.');
 }
 
